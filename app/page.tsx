@@ -1,0 +1,220 @@
+import Link from "next/link";
+import { ArrowRight, LineChart, Sparkles, ShieldCheck, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+export default function Home() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900">
+      <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-4 py-6 md:gap-10 md:px-6 lg:px-8">
+        {/* Hero */}
+        <section className="flex flex-col items-start gap-10 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-6 md:max-w-xl">
+            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+              Smart investing, simplified
+            </Badge>
+            <div className="space-y-3">
+              <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+                One place for{" "}
+                <span className="bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent">
+                  all your portfolios
+                </span>
+                .
+              </h1>
+              <p className="text-balance text-sm text-slate-600 sm:text-base">
+                Track stocks, mutual funds, FDs and more in real time. Let AI
+                highlight risks, rebalance suggestions, and tax‑efficient moves
+                across all your investments.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button asChild size="lg" className="w-full sm:w-auto">
+                <Link href="/auth/signup">
+                  Get started free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="w-full border-slate-700 bg-slate-900/40 text-slate-100 hover:bg-slate-800 hover:text-slate-100 sm:w-auto"
+              >
+                <Link href="/auth/signin" className="text-slate-100">
+                  Sign in to your dashboard
+                </Link>
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                Bank‑grade security
+              </div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-sky-500" />
+                AI‑powered insights
+              </div>
+            </div>
+          </div>
+
+          {/* Right side highlight card */}
+          <Card className="w-full max-w-md border-slate-200 bg-white/80 backdrop-blur">
+            <CardHeader className="space-y-1">
+              <CardTitle className="flex items-center justify-between text-base">
+                Live portfolio snapshot
+                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                  +12.4% YTD
+                </Badge>
+              </CardTitle>
+              <CardDescription className="text-xs text-slate-500">
+                Consolidated view across stocks, mutual funds, and FDs.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-3 text-xs">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-slate-500">Total value</p>
+                  <p className="mt-1 text-sm font-semibold">₹12,58,430</p>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-slate-500">1D change</p>
+                  <p className="mt-1 text-sm font-semibold text-emerald-600">
+                    +₹8,420
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-slate-500">Risk level</p>
+                  <p className="mt-1 text-sm font-semibold text-amber-500">
+                    Moderate
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <p className="flex items-center gap-2 text-slate-600">
+                  <LineChart className="h-4 w-4 text-sky-500" />
+                  AI suggests rebalancing 8% from low‑yield FDs to high‑quality
+                  debt funds to improve returns with similar risk.
+                </p>
+                <p className="text-[0.7rem] text-slate-400">
+                  Suggestions are generated by AI and are not investment advice.
+                  Always do your own research.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Features */}
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
+              Everything you own, in one clean view
+            </h2>
+            <p className="max-w-2xl text-sm text-slate-600">
+              No more spreadsheets or switching between apps. Portfolio Tracker
+              keeps every asset in sync and surfaces what actually needs your
+              attention.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="border-slate-200 bg-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Wallet className="h-4 w-4 text-emerald-500" />
+                  Unified portfolios
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-600">
+                  Track multiple portfolios across brokers, goals, and family
+                  members in a single dashboard.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-slate-200 bg-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <LineChart className="h-4 w-4 text-sky-500" />
+                  Stocks & mutual funds
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-600">
+                  Live P&L, sector exposure, and SIP tracking for all your
+                  equity and mutual fund holdings.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-slate-200 bg-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <ShieldCheck className="h-4 w-4 text-amber-500" />
+                  FDs & guaranteed returns
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-600">
+                  Track fixed deposits, RDs, and other fixed income with
+                  upcoming maturity alerts.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-slate-200 bg-white md:col-span-2 lg:col-span-3">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Sparkles className="h-4 w-4 text-violet-500" />
+                  AI‑powered rebalancing & insights
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-600">
+                  Get suggestions when your allocation drifts from targets, when
+                  a SIP needs a top‑up, or when idle cash could work harder in
+                  low‑risk instruments.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold sm:text-lg">
+                Ready to organize your finances?
+              </h3>
+              <p className="max-w-xl text-xs text-slate-600 sm:text-sm">
+                Create your first portfolio in minutes and start getting AI
+                suggestions on how to improve returns while managing risk.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Button asChild size="sm" className="w-full sm:w-auto">
+                <Link href="/auth/signup">
+                  Start tracking now
+                  <ArrowRight className="ml-2 h-3 w-3" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="w-full border-slate-300 bg-transparent text-slate-900 hover:bg-slate-100 sm:w-auto"
+              >
+                <Link href="/dashboard">View demo dashboard</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
