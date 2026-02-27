@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { resetPassword } from "@/lib/features/authSlice";
 import type { RootState } from "@/lib/store";
 
-export default function ResetPasswordPage() {
+function ResetPasswordInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -184,6 +184,23 @@ export default function ResetPasswordPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center px-4 py-10">
+          <div className="w-full max-w-md">
+            <div className="h-10 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="mt-6 h-64 w-full animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+          </div>
+        </div>
+      }
+    >
+      <ResetPasswordInner />
+    </Suspense>
   );
 }
 

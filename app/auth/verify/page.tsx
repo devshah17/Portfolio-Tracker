@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -20,7 +20,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { verifyOtp } from "@/lib/features/authSlice";
 
-export default function VerifyPage() {
+function VerifyInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -221,6 +221,23 @@ export default function VerifyPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center px-4 py-10">
+          <div className="w-full max-w-md">
+            <div className="h-10 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="mt-6 h-64 w-full animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+          </div>
+        </div>
+      }
+    >
+      <VerifyInner />
+    </Suspense>
   );
 }
 
