@@ -83,37 +83,52 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Midnight violet — deep base with indigo undertones */
+  --background: oklch(0.11 0.028 285);
+  --foreground: oklch(0.94 0.015 285);
+  --card: oklch(0.155 0.038 288);
+  --card-foreground: oklch(0.94 0.015 285);
+  --popover: oklch(0.17 0.04 288);
+  --popover-foreground: oklch(0.94 0.015 285);
+  --primary: oklch(0.72 0.19 285);
+  --primary-foreground: oklch(0.98 0.01 285);
+  --secondary: oklch(0.2 0.045 288);
+  --secondary-foreground: oklch(0.92 0.02 285);
+  --muted: oklch(0.2 0.042 287);
+  --muted-foreground: oklch(0.62 0.05 285);
+  --accent: oklch(0.24 0.065 286);
+  --accent-foreground: oklch(0.94 0.02 285);
+  --destructive: oklch(0.65 0.22 25);
+  --border: oklch(0.42 0.08 285 / 28%);
+  --input: oklch(0.28 0.05 287 / 55%);
+  --ring: oklch(0.62 0.18 285);
+  --chart-1: oklch(0.72 0.19 285);
+  --chart-2: oklch(0.68 0.16 265);
+  --chart-3: oklch(0.75 0.14 195);
+  --chart-4: oklch(0.7 0.18 310);
+  --chart-5: oklch(0.72 0.16 155);
+  --sidebar: oklch(0.125 0.035 287);
+  --sidebar-foreground: oklch(0.92 0.02 285);
+  --sidebar-primary: oklch(0.68 0.2 285);
+  --sidebar-primary-foreground: oklch(0.98 0.01 285);
+  --sidebar-accent: oklch(0.22 0.055 286);
+  --sidebar-accent-foreground: oklch(0.94 0.02 285);
+  --sidebar-border: oklch(0.45 0.09 285 / 22%);
+  --sidebar-ring: oklch(0.62 0.18 285);
+
+  /* Dashboard accents */
+  --brand: oklch(0.72 0.19 285);
+  --brand-muted: oklch(0.55 0.14 285);
+  --glow-violet: oklch(0.55 0.22 285 / 22%);
+  --glow-indigo: oklch(0.48 0.18 270 / 18%);
+  --glow-teal: oklch(0.55 0.14 175 / 12%);
+  --surface-elevated: oklch(0.18 0.045 288);
+  --success: oklch(0.72 0.17 155);
+  --success-muted: oklch(0.22 0.06 155);
+  --danger: oklch(0.68 0.2 25);
+  --danger-muted: oklch(0.22 0.07 25);
+  --tooltip-bg: oklch(0.17 0.042 288);
+  --tooltip-border: oklch(0.5 0.1 285 / 30%);
 }
 
 @layer base {
@@ -123,4 +138,193 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Dark dashboard ambient orbs */
+.dark .dashboard-glow-violet {
+  background: var(--glow-violet);
+}
+.dark .dashboard-glow-indigo {
+  background: var(--glow-indigo);
+}
+.dark .dashboard-glow-teal {
+  background: var(--glow-teal);
+}
+
+.dark .dashboard-sidebar {
+  background: linear-gradient(
+    180deg,
+    oklch(0.14 0.04 288) 0%,
+    oklch(0.11 0.03 285) 100%
+  );
+}
+
+.dark .dashboard-header {
+  background: oklch(0.13 0.035 287 / 75%);
+  border-bottom-color: oklch(0.45 0.09 285 / 20%);
+}
+
+.dark .dashboard-card {
+  background: oklch(0.155 0.038 288 / 85%);
+  border-color: oklch(0.48 0.1 285 / 22%);
+  box-shadow:
+    0 0 0 1px oklch(0.55 0.12 285 / 6%),
+    0 12px 40px -12px oklch(0.05 0.02 285 / 80%);
+}
+
+.dark .dashboard-card:hover {
+  border-color: oklch(0.55 0.14 285 / 35%);
+}
+
+.dark .dashboard-nav-active {
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 0.22 285) 0%,
+    oklch(0.48 0.2 270) 100%
+  );
+  box-shadow: 0 8px 24px -6px oklch(0.45 0.2 285 / 45%);
+}
+
+/* Sub-pages: portfolios, assets, transactions — match /dashboard in dark mode */
+.dark .dashboard-subpage {
+  color: var(--foreground);
+}
+
+.dark .dashboard-subpage .text-slate-900,
+.dark .dashboard-subpage .text-slate-800,
+.dark .dashboard-subpage .text-slate-700 {
+  color: var(--foreground);
+}
+
+.dark .dashboard-subpage .text-slate-500,
+.dark .dashboard-subpage .text-slate-400,
+.dark .dashboard-subpage .text-slate-600 {
+  color: var(--muted-foreground);
+}
+
+.dark .dashboard-subpage .text-indigo-500,
+.dark .dashboard-subpage .text-indigo-400 {
+  color: oklch(0.72 0.16 285);
+}
+
+.dark .dashboard-subpage .text-indigo-600 {
+  color: oklch(0.75 0.15 285);
+}
+
+.dark .dashboard-subpage .text-emerald-600 {
+  color: oklch(0.78 0.16 155);
+}
+
+.dark .dashboard-subpage .text-rose-600 {
+  color: oklch(0.75 0.18 25);
+}
+
+.dark .dashboard-subpage .text-orange-600 {
+  color: oklch(0.78 0.16 55);
+}
+
+.dark .dashboard-subpage .border-slate-200,
+.dark .dashboard-subpage .border-slate-200\/60,
+.dark .dashboard-subpage .border-indigo-100,
+.dark .dashboard-subpage .border-white\/60,
+.dark .dashboard-subpage .border-white\/40,
+.dark .dashboard-subpage .border-white\/20,
+.dark .dashboard-subpage .divide-slate-100 > * + * {
+  border-color: oklch(0.45 0.08 285 / 25%);
+}
+
+.dark .dashboard-subpage .bg-indigo-50,
+.dark .dashboard-subpage .bg-indigo-50\/50,
+.dark .dashboard-subpage .bg-indigo-50\/30,
+.dark .dashboard-subpage .hover\:bg-indigo-50\/30:hover,
+.dark .dashboard-subpage .bg-white\/40,
+.dark .dashboard-subpage .bg-white\/70,
+.dark .dashboard-subpage .bg-white\/60,
+.dark .dashboard-subpage .bg-white\/50,
+.dark .dashboard-subpage .bg-slate-900\/5,
+.dark .dashboard-subpage .bg-slate-50\/50,
+.dark .dashboard-subpage .hover\:bg-slate-50:hover,
+.dark .dashboard-subpage .hover\:bg-slate-50\/50:hover {
+  background-color: oklch(0.16 0.04 288 / 55%);
+}
+
+.dark .dashboard-subpage .bg-emerald-50,
+.dark .dashboard-subpage .bg-emerald-50\/50,
+.dark .dashboard-subpage .bg-emerald-100 {
+  background-color: oklch(0.2 0.06 155 / 40%) !important;
+  border-color: oklch(0.55 0.14 155 / 35%) !important;
+}
+
+.dark .dashboard-subpage .bg-rose-50,
+.dark .dashboard-subpage .bg-rose-50\/50,
+.dark .dashboard-subpage .bg-rose-100 {
+  background-color: oklch(0.2 0.07 25 / 40%) !important;
+  border-color: oklch(0.55 0.16 25 / 35%) !important;
+}
+
+.dark .dashboard-subpage .bg-orange-50 {
+  background-color: oklch(0.22 0.08 55 / 40%) !important;
+  border-color: oklch(0.55 0.16 55 / 35%) !important;
+}
+
+.dark .dashboard-subpage .bg-white:not(.dark\:bg-white) {
+  background-color: oklch(0.18 0.04 288 / 80%);
+}
+
+.dark .dashboard-subpage tr.hover\:bg-indigo-50\/30:hover {
+  background-color: oklch(0.2 0.05 288 / 50%);
+}
+
+.dark .dashboard-subpage .shadow-indigo-100,
+.dark .dashboard-subpage .shadow-indigo-200,
+.dark .dashboard-subpage .shadow-slate-200\/50 {
+  --tw-shadow-color: oklch(0.35 0.15 285 / 25%);
+}
+
+.dark .dashboard-subpage .bg-indigo-600.rounded-3xl,
+.dark .dashboard-subpage .bg-indigo-600.rounded-\[2\.5rem\] {
+  background: linear-gradient(
+    135deg,
+    oklch(0.48 0.2 285) 0%,
+    oklch(0.42 0.18 280) 50%,
+    oklch(0.38 0.16 275) 100%
+  ) !important;
+}
+
+.dark .dashboard-subpage .border-indigo-200 {
+  border-color: oklch(0.5 0.12 285 / 35%);
+}
+
+.dark .dashboard-subpage input,
+.dark .dashboard-subpage select {
+  background-color: oklch(0.16 0.04 288 / 50%);
+  border-color: oklch(0.45 0.08 285 / 30%);
+  color: var(--foreground);
+}
+
+.dark .dashboard-subpage .bg-slate-900 {
+  background-color: oklch(0.14 0.035 288) !important;
+  border-color: oklch(0.45 0.09 285 / 25%) !important;
+}
+
+.dark .dashboard-subpage .bg-slate-800 {
+  background-color: oklch(0.16 0.04 288) !important;
+}
+
+.dark .dashboard-subpage .bg-slate-900\/60 {
+  background-color: oklch(0.1 0.03 285 / 75%) !important;
+}
+
+.dark .dashboard-subpage h2.text-white,
+.dark .dashboard-subpage .text-white {
+  color: var(--foreground);
+}
+
+.dark .dashboard-subpage .bg-white\/5 {
+  background-color: oklch(0.2 0.05 288 / 40%);
+}
+
+.dark .dashboard-subpage .border-white\/5,
+.dark .dashboard-subpage .border-white\/10 {
+  border-color: oklch(0.45 0.09 285 / 20%);
 }
