@@ -162,9 +162,9 @@ export function DailyPriceChartModal({
                     cursor={{ stroke: chartTheme.line, strokeWidth: 1, strokeDasharray: "4 4" }}
                     contentStyle={chartTheme.tooltip}
                     labelStyle={{ color: chartTheme.tooltip.color, fontWeight: 700 }}
-                    formatter={(value: number, name: string) => {
-                      if (name === "priceINR") return [formatINR(value), "INR value"];
-                      return [Number(value).toFixed(2), ticker?.currency ?? "Price"];
+                    formatter={(value: any, name: any) => {
+                      if (name === "priceINR") return [formatINR(Number(value || 0)), "INR value"];
+                      return [Number(value || 0).toFixed(2), ticker?.currency ?? "Price"];
                     }}
                     labelFormatter={(_, payload) => {
                       const row = payload?.[0]?.payload as { date?: string } | undefined;

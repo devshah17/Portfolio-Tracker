@@ -144,7 +144,7 @@ export default function SignInPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between ml-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Security Key</label>
-                  <Link href="/auth/forgot-password" size="sm" className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300 transition-colors">
+                  <Link href="/auth/forgot-password" className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300 transition-colors">
                     Forgot Key?
                   </Link>
                 </div>

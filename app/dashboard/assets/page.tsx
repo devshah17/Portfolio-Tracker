@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "@/app/store/store";
+import { RootState } from "@/lib/store";
 import {
   Plus,
   Trash2,

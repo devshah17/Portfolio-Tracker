@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useTheme } from "next-themes";
-import { RootState } from "@/app/store/store";
+import { RootState } from "@/lib/store";
 import {
   TrendingUp,
   TrendingDown,

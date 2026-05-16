@@ -710,14 +710,14 @@ export default function DashboardPortfoliosPage() {
                       paddingAngle={4}
                       dataKey="value"
                       stroke="none"
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                      label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(1)}%)`}
                     >
                       {allocationData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(val: any, name: string, entry: any) => {
+                      formatter={(val: any, name: any, entry: any) => {
                         const percent = entry?.payload?.displayPercent ?? 0;
                         return [`${formatINR(Number(val || 0))} (${Number(percent).toFixed(1)}%)`, 'Value'];
                       }}
@@ -768,7 +768,7 @@ export default function DashboardPortfoliosPage() {
                     <YAxis hide />
                     <Tooltip
                       cursor={{ fill: perfChartTheme.cursorFill, radius: 8 }}
-                      formatter={(val: number | string) => [formatINR(Number(val || 0)), "Value"]}
+                      formatter={(val: any) => [formatINR(Number(val || 0)), "Value"]}
                       contentStyle={perfChartTheme.tooltipStyle}
                       labelStyle={{ color: perfChartTheme.tooltipStyle.color, fontWeight: 700 }}
                       itemStyle={{ color: perfChartTheme.tooltipStyle.color }}
