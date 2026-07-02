@@ -17,7 +17,13 @@ import {
   PackageMinus,
   RefreshCcw,
   AlertCircle,
-  Search
+  Search,
+  HelpCircle,
+  BarChart2,
+  Zap,
+  BadgeDollarSign,
+  Activity,
+  Scale,
 } from "lucide-react";
 import { toast } from "sonner";
 import { dc } from "@/lib/dashboard-theme";
@@ -39,7 +45,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Sector,
+
   Treemap
 } from "recharts";
 
@@ -51,6 +57,23 @@ interface PortfolioGroup {
   isDefault: boolean;
 }
 
+interface LatestMetrics {
+  trailingPE?: number;
+  forwardPE?: number;
+  epsTrailingTwelveMonths?: number;
+  epsForward?: number;
+  priceToBook?: number;
+  marketCap?: number;
+  dividendYield?: number;
+  trailingAnnualDividendYield?: number;
+  fiftyDayAverage?: number;
+  twoHundredDayAverage?: number;
+  fiftyTwoWeekHigh?: number;
+  fiftyTwoWeekLow?: number;
+  regularMarketVolume?: number;
+  averageDailyVolume3Month?: number;
+}
+
 interface AssetItem {
   _id: string;
   buyingPrice: number;
@@ -58,6 +81,7 @@ interface AssetItem {
   tickerDetails?: { _id: string; name: string; tickerName: string; currency: string };
   currentPrice: number | null;
   exchangeRate: number;
+  latestMetrics?: LatestMetrics | null;
 }
 
 const TICKER_GRADIENTS = [
@@ -87,6 +111,7 @@ const formatINR = (v: number) =>
 const ALL_ASSETS_ID = "__all__";
 
 // ── Treemap Custom Renderers ──────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTreemapContent = (props: any) => {
   const { x, y, width, height, name, plPerc = 0 } = props;
   
@@ -127,6 +152,7 @@ const CustomTreemapContent = (props: any) => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTreemapTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
@@ -144,6 +170,273 @@ const CustomTreemapTooltip = ({ active, payload }: any) => {
   }
   return null;
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tooltip helper
+// ─────────────────────────────────────────────────────────────────────────────
+function InfoTooltip({ text }: { text: string }) {
+  return (
+    <div className="relative group/tip inline-flex items-center">
+      <HelpCircle className="w-3.5 h-3.5 text-slate-400 cursor-help ml-1.5 shrink-0" />
+      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-64 rounded-2xl bg-slate-900 p-3.5 text-xs text-slate-200 leading-relaxed shadow-2xl opacity-0 group-hover/tip:opacity-100 transition-opacity duration-200 z-50">
+        {text}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 -mt-1" />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Portfolio Insights Panel
+// ─────────────────────────────────────────────────────────────────────────────
+type AlertRow = { name: string; ticker: string; detail: string; severity: "warn" | "ok" | "info"; allocWeight: number };
+
+interface InsightCard {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  tooltipText: string;
+  colorClass: string; // border + bg tint
+  headerColor: string; // icon/label accent
+  badgeClass: string;
+  alerts: AlertRow[];
+  emptyText: string;
+}
+
+function InsightAlertRow({ row }: { row: AlertRow }) {
+  const dot =
+    row.severity === "warn"
+      ? "bg-amber-400 dark:bg-amber-300"
+      : row.severity === "ok"
+      ? "bg-emerald-400 dark:bg-emerald-300"
+      : "bg-blue-400 dark:bg-blue-300";
+  return (
+    <div className="flex items-start gap-3.5 py-3.5 border-b border-border/40 last:border-0">
+      <span className={`mt-2 w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <span className="font-bold text-foreground text-sm">{row.name}</span>
+          <span className="text-muted-foreground text-xs">({row.ticker})</span>
+          {row.allocWeight > 0 && (
+            <span className="text-[10px] font-black text-muted-foreground/70 bg-muted/40 dark:bg-muted/30 px-1.5 py-0.5 rounded-full">
+              {row.allocWeight.toFixed(1)}% of portfolio
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{row.detail}</p>
+      </div>
+    </div>
+  );
+}
+
+function InsightCard({ card }: { card: InsightCard }) {
+  const hasAlerts = card.alerts.length > 0;
+  return (
+    <div
+      className={`rounded-3xl border p-7 transition-all duration-300 ${
+        hasAlerts ? card.colorClass : "border-border/50 bg-card/60"
+      }`}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between mb-5 gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+              hasAlerts ? card.headerColor : "bg-muted/50"
+            }`}
+          >
+            {card.icon}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1">
+              <span
+                className={`text-xs font-black uppercase tracking-[0.18em] ${
+                  hasAlerts ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                {card.label}
+              </span>
+              <InfoTooltip text={card.tooltipText} />
+            </div>
+          </div>
+        </div>
+        {hasAlerts && (
+          <span className={`shrink-0 text-xs font-black px-3 py-1.5 rounded-full ${card.badgeClass}`}>
+            {card.alerts.length} signal{card.alerts.length !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+
+      {/* Body */}
+      {hasAlerts ? (
+        <div className="space-y-0 max-h-72 overflow-y-auto pr-1">
+          {card.alerts.map((row, i) => (
+            <InsightAlertRow key={i} row={row} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-emerald-500 dark:text-emerald-400 text-xl">✓</span>
+          <p className="text-sm text-muted-foreground font-medium">{card.emptyText}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PortfolioInsights({
+  items,
+  currentValue,
+}: {
+  items: AssetItem[];
+  currentValue: number;
+}) {
+  const cards: InsightCard[] = React.useMemo(() => {
+    // Build allocation % map for each item
+    const allocMap = new Map<string, number>();
+    for (const item of items) {
+      const rate = item.exchangeRate || 1;
+      const val = (item.currentPrice ? item.currentPrice * rate : item.buyingPrice * rate) * item.quantity;
+      allocMap.set(item._id, currentValue > 0 ? (val / currentValue) * 100 : 0);
+    }
+    const byWeight = (a: AlertRow, b: AlertRow) => b.allocWeight - a.allocWeight;
+
+    // 1. Valuation Radar
+    const valuationAlerts: AlertRow[] = [];
+    for (const item of items) {
+      const m = item.latestMetrics;
+      if (!m) continue;
+      const name = item.tickerDetails?.name || "Unknown";
+      const ticker = item.tickerDetails?.tickerName || "";
+      const allocWeight = allocMap.get(item._id) ?? 0;
+      if (m.trailingPE != null && m.trailingPE > 40) {
+        valuationAlerts.push({ name, ticker, severity: "warn", allocWeight, detail: `P/E ratio is ${m.trailingPE.toFixed(1)}× — trading at a significant premium. Earnings must grow substantially to justify this price.` });
+      } else if (m.trailingPE != null && m.trailingPE > 0 && m.trailingPE < 12) {
+        valuationAlerts.push({ name, ticker, severity: "ok", allocWeight, detail: `P/E ratio is only ${m.trailingPE.toFixed(1)}× — potentially undervalued or a value opportunity.` });
+      }
+      if (m.priceToBook != null && m.priceToBook < 1 && m.priceToBook > 0) {
+        valuationAlerts.push({ name, ticker, severity: "ok", allocWeight, detail: `Price-to-Book is ${m.priceToBook.toFixed(2)}× — trading below book value. May indicate a margin of safety.` });
+      } else if (m.priceToBook != null && m.priceToBook > 6) {
+        valuationAlerts.push({ name, ticker, severity: "warn", allocWeight, detail: `Price-to-Book is ${m.priceToBook.toFixed(2)}× — premium valuation relative to net assets.` });
+      }
+    }
+    valuationAlerts.sort(byWeight);
+
+    // 2. Technical Signals
+    const technicalAlerts: AlertRow[] = [];
+    for (const item of items) {
+      const m = item.latestMetrics;
+      const price = item.currentPrice;
+      if (!m || price == null) continue;
+      const name = item.tickerDetails?.name || "Unknown";
+      const ticker = item.tickerDetails?.tickerName || "";
+      const allocWeight = allocMap.get(item._id) ?? 0;
+      if (m.fiftyTwoWeekHigh != null && price >= m.fiftyTwoWeekHigh * 0.97) {
+        technicalAlerts.push({ name, ticker, severity: "warn", allocWeight, detail: `Price (₹${price.toFixed(2)}) is within 3% of its 52-week high of ₹${m.fiftyTwoWeekHigh.toFixed(2)}. Momentum is strong but upside may be limited short-term.` });
+      } else if (m.fiftyTwoWeekLow != null && price <= m.fiftyTwoWeekLow * 1.05) {
+        technicalAlerts.push({ name, ticker, severity: "warn", allocWeight, detail: `Price (₹${price.toFixed(2)}) is near its 52-week low of ₹${m.fiftyTwoWeekLow.toFixed(2)}. Could be a buying opportunity or signal further weakness.` });
+      }
+      if (m.fiftyDayAverage != null && m.twoHundredDayAverage != null && m.fiftyDayAverage < m.twoHundredDayAverage * 0.98) {
+        technicalAlerts.push({ name, ticker, severity: "warn", allocWeight, detail: `50-day avg (₹${m.fiftyDayAverage.toFixed(0)}) is below 200-day avg (₹${m.twoHundredDayAverage.toFixed(0)}) — a bearish "death cross" signal.` });
+      } else if (m.fiftyDayAverage != null && m.twoHundredDayAverage != null && m.fiftyDayAverage > m.twoHundredDayAverage * 1.04) {
+        technicalAlerts.push({ name, ticker, severity: "ok", allocWeight, detail: `50-day avg (₹${m.fiftyDayAverage.toFixed(0)}) is well above 200-day avg (₹${m.twoHundredDayAverage.toFixed(0)}) — a bullish "golden cross" signal.` });
+      }
+    }
+    technicalAlerts.sort(byWeight);
+
+    // 3. Dividend Watch
+    const dividendAlerts: AlertRow[] = [];
+    for (const item of items) {
+      const m = item.latestMetrics;
+      if (!m) continue;
+      const name = item.tickerDetails?.name || "Unknown";
+      const ticker = item.tickerDetails?.tickerName || "";
+      const allocWeight = allocMap.get(item._id) ?? 0;
+      const yld = (m.dividendYield ?? 0) * 100;
+      const effectiveYld = yld > 0 ? yld : (m.trailingAnnualDividendYield ?? 0) * 100;
+      if (effectiveYld >= 3) {
+        dividendAlerts.push({ name, ticker, severity: "ok", allocWeight, detail: `Dividend yield is ${effectiveYld.toFixed(2)}% — a high-income opportunity paying well above typical fixed-income alternatives.` });
+      } else if (effectiveYld > 0 && effectiveYld < 1) {
+        dividendAlerts.push({ name, ticker, severity: "info", allocWeight, detail: `Dividend yield is low at ${effectiveYld.toFixed(2)}%. This is largely a growth play — don't rely on it for income.` });
+      }
+    }
+    dividendAlerts.sort(byWeight);
+
+    // 4. Volume Anomaly
+    const volumeAlerts: AlertRow[] = [];
+    for (const item of items) {
+      const m = item.latestMetrics;
+      if (!m) continue;
+      const name = item.tickerDetails?.name || "Unknown";
+      const ticker = item.tickerDetails?.tickerName || "";
+      const allocWeight = allocMap.get(item._id) ?? 0;
+      const vol = m.regularMarketVolume ?? 0;
+      const avgVol = m.averageDailyVolume3Month ?? 0;
+      if (vol > 0 && avgVol > 0) {
+        const ratio = vol / avgVol;
+        if (ratio >= 3) volumeAlerts.push({ name, ticker, severity: "warn", allocWeight, detail: `Today's volume (${(vol / 1000).toFixed(0)}K) is ${ratio.toFixed(1)}× the 3-month average. Significant institutional or news-driven activity.` });
+        else if (ratio >= 2) volumeAlerts.push({ name, ticker, severity: "info", allocWeight, detail: `Today's volume (${(vol / 1000).toFixed(0)}K) is ${ratio.toFixed(1)}× the normal average — elevated activity worth watching.` });
+      }
+    }
+    volumeAlerts.sort(byWeight);
+
+    // 5. Concentration Risk
+    const concentrationAlerts: AlertRow[] = [];
+    for (const item of items) {
+      const rate = item.exchangeRate || 1;
+      const effINR = (item.currentPrice ? item.currentPrice * rate : item.buyingPrice * rate);
+      const alloc = currentValue > 0 ? (effINR * item.quantity / currentValue) * 100 : 0;
+      const name = item.tickerDetails?.name || "Unknown";
+      const ticker = item.tickerDetails?.tickerName || "";
+      if (alloc > 20) concentrationAlerts.push({ name, ticker, severity: "warn", allocWeight: alloc, detail: `${alloc.toFixed(1)}% of your portfolio is in this single asset — very high concentration. A bad quarter here has an outsized portfolio impact.` });
+      else if (alloc > 5) concentrationAlerts.push({ name, ticker, severity: "warn", allocWeight: alloc, detail: `${alloc.toFixed(1)}% allocation exceeds the 5% diversification guideline. Consider if this concentration is intentional.` });
+    }
+    concentrationAlerts.sort(byWeight);
+
+    return [
+      { id: "valuation", icon: <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400" />, label: "Valuation Radar", tooltipText: "P/E (Price-to-Earnings) shows how much you pay per ₹1 of profit. P/B (Price-to-Book) compares price to net asset value. High P/E (>40) = expensive; low P/E (<12) = potentially cheap. P/B < 1 means you're buying below asset value.", colorClass: "border-amber-200 dark:border-amber-800/50 bg-amber-50/70 dark:bg-amber-950/20", headerColor: "bg-amber-100 dark:bg-amber-900/40", badgeClass: "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300", alerts: valuationAlerts, emptyText: "All valuations are within normal ranges." },
+      { id: "technical", icon: <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />, label: "Technical Signals", tooltipText: "Moving averages smooth out price noise. When the 50-day average crosses above the 200-day (golden cross) it's bullish; crossing below (death cross) is bearish. Prices near 52-week highs show strength; near 52-week lows show weakness.", colorClass: "border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/70 dark:bg-indigo-950/20", headerColor: "bg-indigo-100 dark:bg-indigo-900/40", badgeClass: "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300", alerts: technicalAlerts, emptyText: "No notable technical crossovers or extremes." },
+      { id: "dividend", icon: <BadgeDollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />, label: "Dividend Watch", tooltipText: "Dividend yield = annual dividend ÷ current price. A yield above 3% is generally considered high income. Most fixed deposits in India return 6–7%, so compare accordingly. Low yield isn't bad — it often means the company reinvests profits for growth instead.", colorClass: "border-blue-200 dark:border-blue-800/50 bg-blue-50/70 dark:bg-blue-950/20", headerColor: "bg-blue-100 dark:bg-blue-900/40", badgeClass: "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300", alerts: dividendAlerts, emptyText: "No notable dividend signals in this portfolio." },
+      { id: "volume", icon: <Zap className="w-5 h-5 text-violet-600 dark:text-violet-400" />, label: "Volume Anomaly", tooltipText: "Volume is the number of shares traded in a day. When today's volume is 2× or more vs the 3-month average, it often signals institutional buying/selling, news events, or earnings reactions. High volume on a price spike = strong conviction; high volume on a drop = potential panic selling.", colorClass: "border-violet-200 dark:border-violet-800/50 bg-violet-50/70 dark:bg-violet-950/20", headerColor: "bg-violet-100 dark:bg-violet-900/40", badgeClass: "bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300", alerts: volumeAlerts, emptyText: "No unusual trading volume detected today." },
+      { id: "concentration", icon: <BarChart2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />, label: "Concentration Risk", tooltipText: "A single asset exceeding 5% of your portfolio increases overall risk. If it drops 30%, it moves your whole portfolio by 1.5%+. The 5% rule is a common diversification guideline — intentional concentration in high-conviction picks is fine, but it should be a deliberate choice.", colorClass: "border-rose-200 dark:border-rose-800/50 bg-rose-50/70 dark:bg-rose-950/20", headerColor: "bg-rose-100 dark:bg-rose-900/40", badgeClass: "bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300", alerts: concentrationAlerts, emptyText: "Portfolio is well-diversified. No position exceeds 5%." },
+    ];
+  }, [items, currentValue]);
+
+  const totalSignals = cards.reduce((acc, c) => acc + c.alerts.length, 0);
+
+  return (
+    <div className="mt-10">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+            <Zap className="w-6 h-6 text-violet-500 dark:text-[oklch(0.72_0.16_285)]" />
+            Portfolio Insights
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Intelligent signals sorted by portfolio weight · derived from today&apos;s market data
+          </p>
+        </div>
+        {totalSignals > 0 && (
+          <div className="flex items-center gap-2 bg-violet-50 dark:bg-[oklch(0.22_0.06_285/50%)] border border-violet-200 dark:border-[oklch(0.45_0.14_285/40%)] text-violet-700 dark:text-[oklch(0.78_0.16_285)] text-xs font-black px-4 py-2.5 rounded-full">
+            <AlertCircle className="w-3.5 h-3.5" />
+            {totalSignals} active signal{totalSignals !== 1 ? "s" : ""}
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        {cards.map((card) => (
+          <InsightCard key={card.id} card={card} />
+        ))}
+      </div>
+      {items.every((i) => !i.latestMetrics) && (
+        <div className="mt-5 text-center text-sm text-muted-foreground bg-muted/30 border border-border/50 rounded-2xl px-6 py-5">
+          <AlertCircle className="w-4 h-4 mx-auto mb-1.5 text-muted-foreground/50" />
+          Financial metrics will appear once today&apos;s price sync runs. Concentration Risk is always available.
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function DashboardPortfoliosPage() {
   const user = useSelector((s: RootState) => s.auth.user);
@@ -190,7 +483,7 @@ export default function DashboardPortfoliosPage() {
         try {
           const parsed = JSON.parse(stored);
           return parsed.id || parsed._id;
-        } catch (e) { return null; }
+        } catch (_e) { return null; }
       }
     }
     return null;
@@ -239,7 +532,7 @@ export default function DashboardPortfoliosPage() {
       const res = await fetch(`${API_BASE}/portfolio-groups/user/${getUserId()}`);
       const data = await res.json();
       setGroups(data.data || []);
-    } catch (e) {
+    } catch (_e) {
       toast.error("Could not load portfolios");
     }
   }, [user]);
@@ -253,7 +546,7 @@ export default function DashboardPortfoliosPage() {
       );
       const data = await res.json();
       setItems(data.data || []);
-    } catch (e) {
+    } catch (_e) {
       toast.error("Could not load portfolio items");
     } finally {
       setLoadingItems(false);
@@ -266,7 +559,7 @@ export default function DashboardPortfoliosPage() {
       const res = await fetch(`${API_BASE}/portfolios/user/${getUserId()}`);
       const data = await res.json();
       setAllAssets(data.data || []);
-    } catch (e) {
+    } catch (_e) {
       console.error("Failed to load all assets");
     }
   }, [user]);
@@ -308,7 +601,7 @@ export default function DashboardPortfoliosPage() {
   const displayItems = isAllAssets ? allAssets : items;
 
   const filteredAndSortedItems = React.useMemo(() => {
-    let result = [...displayItems].filter(item => 
+    const result = [...displayItems].filter(item => 
       item.tickerDetails?.tickerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.tickerDetails?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -425,8 +718,8 @@ export default function DashboardPortfoliosPage() {
       setShowCreateModal(false);
       await fetchGroups();
       setSelectedGroupId(data.data._id);
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      toast.error((e as Error).message);
     } finally {
       setCreating(false);
     }
@@ -461,8 +754,8 @@ export default function DashboardPortfoliosPage() {
       setSelectedGroupId(ALL_ASSETS_ID);
       setItems([]);
       fetchGroups();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      toast.error((e as Error).message);
     }
   };
 
@@ -479,8 +772,8 @@ export default function DashboardPortfoliosPage() {
       toast.success("Asset added to portfolio");
       fetchGroupItems(selectedGroupId);
       fetchAllAssets();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      toast.error((e as Error).message);
     }
   };
 
@@ -494,8 +787,8 @@ export default function DashboardPortfoliosPage() {
       if (!res.ok) throw new Error((await res.json()).message);
       toast.success("Asset removed from portfolio");
       fetchGroupItems(selectedGroupId);
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      toast.error((e as Error).message);
     }
   };
 
@@ -717,6 +1010,7 @@ export default function DashboardPortfoliosPage() {
                       ))}
                     </Pie>
                     <Tooltip 
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       formatter={(val: any, name: any, entry: any) => {
                         const percent = entry?.payload?.displayPercent ?? 0;
                         return [`${formatINR(Number(val || 0))} (${Number(percent).toFixed(1)}%)`, 'Value'];
@@ -768,6 +1062,7 @@ export default function DashboardPortfoliosPage() {
                     <YAxis hide />
                     <Tooltip
                       cursor={{ fill: perfChartTheme.cursorFill, radius: 8 }}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       formatter={(val: any) => [formatINR(Number(val || 0)), "Value"]}
                       contentStyle={perfChartTheme.tooltipStyle}
                       labelStyle={{ color: perfChartTheme.tooltipStyle.color, fontWeight: 700 }}
@@ -847,6 +1142,9 @@ export default function DashboardPortfoliosPage() {
             </div>
           </div>
 
+          {/* ── Portfolio Insights ─────────────────────────────────────────── */}
+          <PortfolioInsights items={displayItems} currentValue={currentValue} />
+
           {/* Exchange Rate Strip */}
           {(() => {
             const fxRates = Array.from(
@@ -889,7 +1187,7 @@ export default function DashboardPortfoliosPage() {
             <div className={cn(dc.tableWrap, "rounded-3xl")}>
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-slate-800">Add assets to "{selectedGroup?.name}"</h3>
+                  <h3 className="font-semibold text-slate-800">Add assets to &quot;{selectedGroup?.name}&quot;</h3>
                   <p className="text-xs text-slate-500 mt-0.5">Click the + button to add an asset from your holdings</p>
                 </div>
                 <button onClick={() => setShowAddPanel(false)} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400">
@@ -949,7 +1247,7 @@ export default function DashboardPortfoliosPage() {
                   key={sort.id}
                   onClick={() => {
                     if (sortBy === sort.id) setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                    else setSortBy(sort.id as any);
+                    else setSortBy(sort.id as "name" | "value" | "pl");
                   }}
                   className={`flex-1 sm:flex-none px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     sortBy === sort.id ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
