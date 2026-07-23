@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { logout } from "@/lib/features/authSlice";
 import {
   LayoutDashboard,
   Layers,
@@ -12,11 +14,13 @@ import {
   PieChart,
   LogOut,
   Bell,
+  Radar,
   Search,
   Menu,
   X,
   ShieldCheck,
   ArrowRightLeft,
+  RefreshCw,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -27,14 +31,22 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useDispatch();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/login");
+  };
 
   const menuItems = [
     { name: "Overview", icon: LayoutDashboard, href: "/dashboard" },
     { name: "Vaults", icon: Layers, href: "/dashboard/portfolios" },
-    { name: "Inventory", icon: PieChart, href: "/dashboard/assets" },
     { name: "Transactions", icon: ArrowRightLeft, href: "/dashboard/transactions" },
+    { name: "Fund Radar", icon: Radar, href: "/dashboard/fund-radar" },
+    { name: "Rebalance", icon: RefreshCw, href: "/dashboard/rebalance" },
     { name: "Catalog", icon: Database, href: "/dashboard/tickers" },
   ];
 
@@ -114,6 +126,7 @@ export default function DashboardLayout({
         <div className="mt-auto p-3">
           <button
             type="button"
+            onClick={handleLogout}
             className={cn(
               "flex w-full items-center gap-3 rounded-xl p-3.5 text-muted-foreground transition-all hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400",
               isCollapsed && "justify-center"

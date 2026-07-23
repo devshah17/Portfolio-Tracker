@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useTheme } from "next-themes";
-import { X, LineChart as LineChartIcon, Loader2, BarChart2, Activity, Scale } from "lucide-react";
+import { X, LineChart as LineChartIcon, Loader2, BarChart2, Activity, Scale, Bot, TrendingUp, TrendingDown, Minus, AlertTriangle, Lightbulb, Target } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -44,6 +44,8 @@ export type DailyPriceTicker = {
   name: string;
   tickerName: string;
   currency: string;
+  type?: string;
+  sector?: string;
 };
 
 type Props = {
@@ -52,7 +54,10 @@ type Props = {
   ticker: DailyPriceTicker | null;
   prices: DailyPricePoint[];
   loading: boolean;
+  holdingInfo?: { quantity: number; buyingPrice: number; exchangeRate: number } | null;
 };
+
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const fmtINR = (v: number) => "₹" + v.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCrore = (v: number) => {
@@ -83,10 +88,45 @@ function MetricPill({ label, value, sub, accent }: { label: string; value: strin
   );
 }
 
-export function DailyPriceChartModal({ open, onClose, ticker, prices, loading }: Props) {
+export function DailyPriceChartModal({ open, onClose, ticker, prices, loading, holdingInfo }: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const [activeTab, setActiveTab] = useState<"price" | "volume" | "valuation">("price");
+  const [activeTab, setActiveTab] = useState<"price" | "volume" | "valuation" | "ai">("price");
+
+  // AI Analysis state
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const fetchAiAnalysis = useCallback(async () => {
+    if (!ticker?.tickerName) return;
+    setAiLoading(true); setAiError(null); setAiResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/ai/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        body: JSON.stringify({ ticker: ticker.tickerName }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Analysis failed");
+      setAiResult(data.data);
+    } catch (e: any) { setAiError(e.message); }
+    finally { setAiLoading(false); }
+  }, [ticker?.tickerName]);
+
+  const handleTabClick = (tab: "price" | "volume" | "valuation" | "ai") => {
+    setActiveTab(tab);
+    if (tab === "ai" && !aiResult && !aiLoading) fetchAiAnalysis();
+  };
+
+  const actionColor: Record<string, string> = {
+    BUY: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    HOLD: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    SELL: "bg-rose-500/15 text-rose-400 border-rose-500/30",
+    REDUCE: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  };
+  const sentimentColor: Record<string, string> = { Bullish: "text-emerald-400", Bearish: "text-rose-400", Neutral: "text-amber-400" };
+  const probabilityColor: Record<string, string> = { High: "text-emerald-400", Medium: "text-amber-400", Low: "text-rose-400" };
 
   const chartTheme = useMemo(() => ({
     grid: isDark ? "oklch(0.45 0.08 285 / 20%)" : "#e2e8f0",
@@ -136,7 +176,14 @@ export function DailyPriceChartModal({ open, onClose, ticker, prices, loading }:
               <LineChartIcon className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className={dc.modalTitle}>{ticker?.name ?? "Asset Insights"}</h2>
+              <div className="flex items-center gap-3">
+                <h2 className={dc.modalTitle}>{ticker?.name ?? "Asset Insights"}</h2>
+                {ticker?.type === "Stock" && ticker?.sector && (
+                  <span className="text-[10px] font-bold tracking-wider bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full uppercase border border-violet-200 dark:border-violet-800/60 mt-1">
+                    {ticker.sector}
+                  </span>
+                )}
+              </div>
               <p className={cn(dc.modalSub, "mt-1")}>
                 {ticker?.tickerName} {ticker?.currency ? `· ${ticker.currency}` : ""} {prices.length > 0 ? `· ${prices.length} days of history` : ""}
               </p>
@@ -148,17 +195,18 @@ export function DailyPriceChartModal({ open, onClose, ticker, prices, loading }:
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-border/60 px-6 sm:px-8 flex gap-6 shrink-0">
+        <div className="border-b border-border/60 px-6 sm:px-8 flex gap-6 shrink-0 overflow-x-auto">
           {[
             { id: "price", label: "Price & Technicals", icon: Activity },
             { id: "volume", label: "Trading Volume", icon: BarChart2 },
             { id: "valuation", label: "Valuation Trends", icon: Scale },
+            { id: "ai", label: "AI Analysis", icon: Bot },
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as "price" | "volume" | "valuation")}
+              onClick={() => handleTabClick(tab.id as any)}
               className={cn(
-                "py-4 flex items-center gap-2 text-sm font-black border-b-2 transition-colors",
+                "py-4 flex items-center gap-2 text-sm font-black border-b-2 transition-colors whitespace-nowrap",
                 activeTab === tab.id
                   ? "border-violet-500 text-violet-600 dark:text-violet-400"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -424,6 +472,115 @@ export function DailyPriceChartModal({ open, onClose, ticker, prices, loading }:
                     </>
                   )}
                 </>
+              )}
+              {/* TAB 4: AI ANALYSIS */}
+              {activeTab === "ai" && (
+                <div className="space-y-5 animate-in fade-in duration-300">
+                  {aiLoading && (
+                    <div className="flex flex-col items-center justify-center py-16 gap-4">
+                      <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+                      <p className="text-sm text-muted-foreground">Consulting the AI advisor…</p>
+                    </div>
+                  )}
+                  {aiError && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-rose-400 text-sm">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />{aiError}
+                    </div>
+                  )}
+                  {aiResult && (
+                    <>
+                      {/* Action + Meta row */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className={`rounded-2xl border px-4 py-3 flex flex-col gap-1 ${actionColor[aiResult.action] ?? ""}`}>
+                          <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Recommendation</span>
+                          <span className="text-xl font-black">{aiResult.action}</span>
+                          <span className="text-xs opacity-70">{aiResult.conviction} conviction</span>
+                        </div>
+                        <div className="rounded-2xl border border-border/50 bg-muted/20 px-4 py-3 flex flex-col gap-1">
+                          <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Price Trend</span>
+                          <span className="text-base font-black flex items-center gap-1">
+                            {aiResult.priceMovement === "Uptrend" ? <TrendingUp className="h-4 w-4 text-emerald-400"/> : aiResult.priceMovement === "Downtrend" ? <TrendingDown className="h-4 w-4 text-rose-400"/> : <Minus className="h-4 w-4 text-amber-400"/>}
+                            {aiResult.priceMovement}
+                          </span>
+                        </div>
+                        <div className="rounded-2xl border border-border/50 bg-muted/20 px-4 py-3 flex flex-col gap-1">
+                          <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Upward Probability</span>
+                          <span className={`text-base font-black ${probabilityColor[aiResult.upwardProbability]}`}>{aiResult.upwardProbability}</span>
+                        </div>
+                        <div className="rounded-2xl border border-border/50 bg-muted/20 px-4 py-3 flex flex-col gap-1">
+                          <span className="text-[10px] font-black uppercase tracking-wider opacity-60">News Sentiment</span>
+                          <span className={`text-base font-black ${sentimentColor[aiResult.newsSentiment]}`}>{aiResult.newsSentiment}</span>
+                        </div>
+                      </div>
+
+                      {/* Rationale */}
+                      <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">
+                        <h4 className="text-xs font-bold text-violet-400 uppercase tracking-wider mb-2 flex items-center gap-2"><Bot className="h-3.5 w-3.5"/>Investment Thesis</h4>
+                        <p className="text-sm text-foreground/90 leading-relaxed">{aiResult.rationale}</p>
+                      </div>
+
+                      {/* News highlights */}
+                      {aiResult.newsHighlights?.length > 0 && (
+                        <div className="rounded-2xl border border-border/50 bg-card/70 p-5">
+                          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2"><Target className="h-3.5 w-3.5 text-cyan-400"/>News Highlights</h4>
+                          <ul className="space-y-1.5">
+                            {aiResult.newsHighlights.map((n: string, i: number) => (
+                              <li key={i} className="text-sm text-foreground/80 flex items-start gap-2"><span className="text-violet-400 shrink-0 mt-0.5">▸</span>{n}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Risks + Quarterly */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5">
+                          <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-2"><AlertTriangle className="h-3.5 w-3.5"/>Key Risks</h4>
+                          <ul className="space-y-1.5">
+                            {(aiResult.keyRisks ?? []).map((r: string, i: number) => (
+                              <li key={i} className="text-sm text-rose-200/80 flex items-start gap-2"><span className="text-rose-500 shrink-0 mt-0.5">▸</span>{r}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5">
+                          <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2"><Lightbulb className="h-3.5 w-3.5"/>Quarterly Outlook</h4>
+                          <p className="text-sm text-indigo-200/80 leading-relaxed">{aiResult.quarterlyOutlook}</p>
+                        </div>
+                      </div>
+
+                      {/* Related companies */}
+                      {aiResult.relatedCompanies?.length > 0 && (
+                        <div className="rounded-2xl border border-border/50 bg-card/70 p-5">
+                          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2"><TrendingUp className="h-3.5 w-3.5 text-violet-400"/>Related Companies</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {aiResult.relatedCompanies.map((c: any, i: number) => (
+                              <div key={i} className="p-4 rounded-xl border border-border/40 bg-background/50 flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="px-2 py-1 rounded-md bg-indigo-500/10 text-indigo-400 font-black text-xs shrink-0">{c.ticker}</span>
+                                    <span className="font-bold text-sm text-foreground truncate">{c.companyName}</span>
+                                  </div>
+                                  <span className={`text-[10px] uppercase tracking-widest font-black px-2 py-1 rounded-full border shrink-0 ml-2 ${actionColor[c.action] ?? ""}`}>{c.action}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{c.rationale}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <button onClick={fetchAiAnalysis} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        <Bot className="h-3.5 w-3.5"/> Refresh analysis
+                      </button>
+                      <p className="text-xs text-muted-foreground/40 text-center">Powered by Gemini AI — Not financial advice.</p>
+                    </>
+                  )}
+                  {!aiLoading && !aiResult && !aiError && (
+                    <div className="flex flex-col items-center justify-center py-16 gap-3">
+                      <Bot className="h-10 w-10 text-violet-500/50" />
+                      <p className="text-sm text-muted-foreground">Loading AI analysis…</p>
+                    </div>
+                  )}
+                </div>
               )}
 
             </div>

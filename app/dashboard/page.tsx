@@ -14,6 +14,7 @@ import {
   Briefcase,
   Globe,
   Sparkles,
+  Activity,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -24,6 +25,14 @@ import {
   Pie,
 } from "recharts";
 import { cn } from "@/lib/utils";
+import HistoricalPerformanceChart from "@/components/dashboard/historical-performance-chart";
+import RiskMetricsWidget from "@/components/dashboard/risk-metrics-widget";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -58,6 +67,7 @@ export default function DashboardOverviewPage() {
 
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedSector, setSelectedSector] = useState<any>(null);
 
   const fetchDashboardStats = useCallback(async () => {
     const userId = getUserId();
@@ -154,7 +164,7 @@ export default function DashboardOverviewPage() {
     );
   }
 
-  const { summary, allocation, marketAllocation, groups, movers } = stats;
+  const { summary, allocation, marketAllocation, sectorAllocation, groups, movers, benchmarks, riskMetrics } = stats;
 
   return (
     <div className="animate-in fade-in min-h-full px-4 py-8 duration-700 sm:px-10 sm:py-10 lg:px-12">
@@ -191,6 +201,9 @@ export default function DashboardOverviewPage() {
       </div>
 
       <div className="mx-auto max-w-[1400px] space-y-10">
+        {/* Historical Chart */}
+        <HistoricalPerformanceChart userId={getUserId()} />
+
         {/* Summary cards */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="dashboard-card group relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/80 p-8 shadow-lg backdrop-blur-xl transition-shadow hover:shadow-xl">
@@ -255,6 +268,98 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
         </div>
+
+        {/* Market Benchmarks */}
+        {benchmarks && benchmarks.length > 0 && (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {benchmarks.map((benchmark: any, idx: number) => (
+              <div
+                key={idx}
+                className="dashboard-card rounded-2xl border border-border/60 bg-card/70 p-5 shadow-sm backdrop-blur-xl transition-all hover:scale-[1.02] hover:shadow-md hover:border-violet-500/20"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground truncate mr-2" title={benchmark.name}>
+                    {benchmark.name}
+                  </span>
+                  <Activity className="h-4 w-4 text-violet-500 shrink-0" />
+                </div>
+                <div className="flex items-end justify-between">
+                  <h4 className="text-lg font-black text-foreground">
+                    {benchmark.symbol === 'BTC-USD' || benchmark.symbol.includes('^')
+                      ? benchmark.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      : benchmark.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h4>
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 text-xs font-black",
+                      (benchmark.change || 0) >= 0
+                        ? "text-emerald-600 dark:text-[oklch(0.78_0.16_155)]"
+                        : "text-rose-600 dark:text-[oklch(0.75_0.18_25)]"
+                    )}
+                  >
+                    {(benchmark.change || 0) >= 0 ? (
+                      <TrendingUp className="h-3 w-3" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3" />
+                    )}
+                    {Math.abs(benchmark.change || 0).toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Risk Metrics */}
+        {riskMetrics && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="dashboard-card rounded-2xl border border-border/60 bg-card/70 p-5 shadow-sm backdrop-blur-xl transition-all hover:scale-[1.02] hover:shadow-md">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                Portfolio Beta
+              </p>
+              <h3 className="text-2xl font-black text-foreground">
+                {riskMetrics.portfolioBeta.toFixed(2)}
+              </h3>
+              <p className="mt-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                Relative Volatility
+              </p>
+            </div>
+            
+            <div className="dashboard-card rounded-2xl border border-border/60 bg-card/70 p-5 shadow-sm backdrop-blur-xl transition-all hover:scale-[1.02] hover:shadow-md">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                1Y Max Drawdown
+              </p>
+              <h3 className="text-2xl font-black text-rose-600 dark:text-[oklch(0.75_0.18_25)]">
+                {riskMetrics.maxDrawdown > 0 ? "-" : ""}{riskMetrics.maxDrawdown.toFixed(2)}%
+              </h3>
+              <p className="mt-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                Max Drop (Est)
+              </p>
+            </div>
+
+            <div className="dashboard-card rounded-2xl border border-border/60 bg-card/70 p-5 shadow-sm backdrop-blur-xl transition-all hover:scale-[1.02] hover:shadow-md">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                Risk Profile
+              </p>
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "h-3 w-3 rounded-full shadow-lg",
+                  riskMetrics.volatilityProfile === "Low" ? "bg-emerald-500 shadow-emerald-500/50" :
+                  riskMetrics.volatilityProfile === "Medium" ? "bg-yellow-500 shadow-yellow-500/50" :
+                  "bg-rose-500 shadow-rose-500/50"
+                )} />
+                <h3 className={cn(
+                  "text-2xl font-black",
+                  riskMetrics.volatilityProfile === "Low" ? "text-emerald-600 dark:text-[oklch(0.78_0.16_155)]" :
+                  riskMetrics.volatilityProfile === "Medium" ? "text-yellow-600 dark:text-yellow-500" :
+                  "text-rose-600 dark:text-[oklch(0.75_0.18_25)]"
+                )}>
+                  {riskMetrics.volatilityProfile}
+                </h3>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Charts + vaults */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -368,6 +473,76 @@ export default function DashboardOverviewPage() {
               </div>
             </section>
 
+            {/* Sector allocation */}
+            {sectorAllocation && sectorAllocation.length > 0 && (
+              <section className="dashboard-card rounded-[2rem] border border-border/60 bg-card/70 p-8 shadow-lg backdrop-blur-xl">
+                <h3 className="mb-8 flex items-center gap-3 text-lg font-black text-foreground">
+                  <Layers className="h-6 w-6 text-violet-600 dark:text-[oklch(0.78_0.16_285)]" />
+                  Sector allocation
+                </h3>
+                <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-2">
+                  <div className="h-[320px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={sectorAllocation}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={125}
+                          paddingAngle={5}
+                          dataKey="value"
+                          stroke="none"
+                          onClick={(data, index) => setSelectedSector(data.payload || data)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {sectorAllocation.map((_: unknown, index: number) => (
+                            <Cell
+                              key={`scell-${index}`}
+                              fill={chartColors[(index + 4) % chartColors.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={tooltipStyle}
+                          formatter={(val) => formatINR(Number(val))}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-3">
+                    {sectorAllocation.map((item: { name: string; percent: number }, idx: number) => (
+                      <div
+                        key={idx}
+                        onClick={() => setSelectedSector(item)}
+                        className="cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-between rounded-2xl border border-border/50 bg-muted/30 px-4 py-3.5 dark:border-[oklch(0.45_0.08_285/25%)] dark:bg-[oklch(0.18_0.04_288/60%)]"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: chartColors[(idx + 4) % chartColors.length] }}
+                          />
+                          <span className="font-bold text-foreground">{item.name}</span>
+                        </div>
+                        <span className="text-sm font-black text-muted-foreground">
+                          {item.percent.toFixed(1)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Risk Metrics */}
+            {summary.riskMetrics && (
+              <RiskMetricsWidget 
+                beta={summary.riskMetrics.portfolioBeta} 
+                maxDrawdown={summary.riskMetrics.maxDrawdown} 
+                volatilityProfile={summary.riskMetrics.volatilityProfile} 
+              />
+            )}
+
             {/* Top movers */}
             <section className="dashboard-card rounded-[2rem] border border-border/60 bg-card/70 p-8 shadow-lg backdrop-blur-xl">
               <h3 className="mb-8 flex items-center gap-3 text-lg font-black text-foreground">
@@ -456,6 +631,37 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* Sector Breakdown Modal */}
+      <Dialog open={!!selectedSector} onOpenChange={(open) => !open && setSelectedSector(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Layers className="h-5 w-5 text-violet-500" />
+              {selectedSector?.name} Sector Holdings
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            {selectedSector?.companies?.map((company: any, idx: number) => (
+              <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-muted/20">
+                <div>
+                  <div className="font-semibold text-foreground">{company.name}</div>
+                  <div className="text-xs text-muted-foreground">{company.tickerName}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-foreground">{formatINR(company.value)}</div>
+                  <div className={`text-xs font-semibold ${company.gains >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                    {company.gains >= 0 ? "+" : ""}{formatINR(company.gains)}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {!selectedSector?.companies?.length && (
+              <div className="text-center text-muted-foreground py-8">No companies found in this sector.</div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

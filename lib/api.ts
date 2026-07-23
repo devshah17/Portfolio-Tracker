@@ -7,6 +7,19 @@ const api = axios.create({
     "http://localhost:3000/api",
 })
 
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken")
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {

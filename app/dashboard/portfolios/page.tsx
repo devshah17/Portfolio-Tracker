@@ -33,6 +33,7 @@ import {
   type DailyPricePoint,
   type DailyPriceTicker,
 } from "@/components/dashboard/daily-price-chart-modal";
+import { VaultAdvisor } from "@/components/dashboard/vault-advisor";
 import {
   PieChart,
   Pie,
@@ -78,7 +79,7 @@ interface AssetItem {
   _id: string;
   buyingPrice: number;
   quantity: number;
-  tickerDetails?: { _id: string; name: string; tickerName: string; currency: string };
+  tickerDetails?: { _id: string; name: string; tickerName: string; currency: string; type?: string; sector?: string; };
   currentPrice: number | null;
   exchangeRate: number;
   latestMetrics?: LatestMetrics | null;
@@ -1427,6 +1428,16 @@ export default function DashboardPortfoliosPage() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* ── Vault AI Advisor ─────────────────────────────────────────────── */}
+      {selectedGroupId && displayItems.length > 0 && (
+        <div className="max-w-[1400px] mx-auto mt-10">
+          <VaultAdvisor 
+            groupId={isAllAssets ? null : selectedGroupId} 
+            groupName={selectedGroupName} 
+          />
         </div>
       )}
 
